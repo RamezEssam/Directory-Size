@@ -9,6 +9,7 @@
 	#include <windows.h>
 #else
 	#include <sys/stat.h>
+	#include <dirent.h>
 #endif
 
 void format_size(long long bytes) 
@@ -77,7 +78,8 @@ int get_dir_size(const char *path, long long *dirsize, int verbose)
         // Build full path
         snprintf(fullpath, MAX_PATH, "%s\\%s", path, data.cFileName);
 
-        if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) 
+        if ((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
+			!(data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)) 
 		{
             // Recurse into subdirectory
             get_dir_size(fullpath, dirsize, verbose);
@@ -86,7 +88,7 @@ int get_dir_size(const char *path, long long *dirsize, int verbose)
             // File only
 			if(!get_file_size(fullpath, &file_size))
 			{
-				printf("ERROR getting file size: %s", fullpath);
+				printf("ERROR getting file size: %s\n", fullpath);
 			}else
 			{
 				if(verbose)
@@ -133,7 +135,7 @@ int get_dir_size(const char *path, long long *dirsize, int verbose)
 		{
 			if(!get_file_size(fullpath, &file_size)) 
 			{
-				printf("ERROR getting file size: %s", fullpath);
+				printf("ERROR getting file size: %s\n", fullpath);
 			}else
 			{
 				if(verbose)
@@ -146,7 +148,7 @@ int get_dir_size(const char *path, long long *dirsize, int verbose)
 			
         } else if (S_ISDIR(st.st_mode)) 
 		{
-            get_dir_size(fullpath);
+            get_dir_size(fullpath, dirsize, verbose);
         }
     }
 
@@ -154,10 +156,6 @@ int get_dir_size(const char *path, long long *dirsize, int verbose)
 	return 1;
 }
 #endif
-
-
-
-
 
 
 
@@ -185,7 +183,7 @@ int main(int argc, char **argv)
 	}
 	
 	const char *dirpath = argv[1];
-	long long dirsize;
+	long long dirsize = 0;
 	if(!get_dir_size(dirpath, &dirsize, verbose))
 	{
 		printf("ERROR getting directory size\n");
