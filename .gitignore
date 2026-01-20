@@ -1,0 +1,14 @@
+# Executables
+*.exe
+*.out
+*.app
+
+# Object files
+*.o
+*.obj
+
+# Static / shared libraries
+*.a
+*.so
+*.dll
+*.dylib
